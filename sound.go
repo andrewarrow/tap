@@ -7,7 +7,7 @@ import (
 
 func PlaySound(asBytes []byte) {
 	decoder, data, _ := minimp3.DecodeFull(asBytes)
-	context, _ := oto.NewContext(decoder.SampleRate, 2, 2, 4096)
+	context, _ := oto.NewContext(decoder.SampleRate, 2, 2, 2048)
 
 	defer context.Close()
 	player := context.NewPlayer()
