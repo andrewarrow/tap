@@ -43,10 +43,12 @@ func GetData() {
 			return
 		}
 
+		fmt.Println(len(line))
 		buffer.Write(line)
 		var m map[string]any
 		err = json.Unmarshal(buffer.Bytes(), &m)
 		if err == nil {
+			fmt.Println("m", len(m))
 			buffer.Reset()
 		}
 	}
