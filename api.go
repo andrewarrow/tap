@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -48,7 +49,10 @@ func GetData() {
 		var m map[string]any
 		err = json.Unmarshal(buffer.Bytes(), &m)
 		if err == nil {
-			fmt.Println("m", len(m), m["audio_base64"])
+			encodedString, _ := m["audio_base64"].(string)
+			decodedBytes, _ := base64.StdEncoding.DecodeString(encodedString)
+			PlaySound(decodedBytes)
+
 			buffer.Reset()
 		}
 	}
