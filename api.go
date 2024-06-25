@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -24,12 +25,37 @@ func GetData() {
 	}
 	defer resp.Body.Close()
 
-	asBytes, _ := io.ReadAll(resp.Body)
-	asString := string(asBytes)
-	fmt.Println(asString)
+	//audio_base64
+	gbuffer = []byte{}
+	buffer := make([]byte, 1024*90)
+	for {
+		bytesRead, err := resp.Body.Read(buffer)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			fmt.Println("Error reading data:", err)
+			return
+		}
+		processChunk(buffer[:bytesRead])
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		fmt.Println("Error response from server:", resp.Status)
 		return
+	}
+
+}
+
+var gbuffer = []byte{}
+
+func processChunk(data []byte) {
+	gbuffer = append(gbuffer, data...)
+	fmt.Println(len(gbuffer))
+	var m map[string]any
+	err := json.Unmarshal(gbuffer, &m)
+	if err == nil {
+		fmt.Println("www", len(m))
 	}
 
 }
