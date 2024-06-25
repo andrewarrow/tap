@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,8 +14,8 @@ import (
 func GetData() {
 	url := "https://api.elevenlabs.io/v1/text-to-speech/GBv7mTt0atIp3Br8iCZE/stream/with-timestamps"
 
-	reader := strings.NewReader(example)
-	req, _ := http.NewRequest("POST", url, reader)
+	readerPost := strings.NewReader(example)
+	req, _ := http.NewRequest("POST", url, readerPost)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("xi-api-key", os.Getenv("E_API"))
 
@@ -26,10 +28,13 @@ func GetData() {
 	defer resp.Body.Close()
 
 	//audio_base64
-	gbuffer = []byte{}
-	buffer := make([]byte, 1024*90)
+
+	reader := bufio.NewReader(resp.Body)
+
+	var buffer bytes.Buffer
+
 	for {
-		bytesRead, err := resp.Body.Read(buffer)
+		line, err := reader.ReadBytes('\n')
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -37,7 +42,13 @@ func GetData() {
 			fmt.Println("Error reading data:", err)
 			return
 		}
-		processChunk(buffer[:bytesRead])
+
+		buffer.Write(line)
+		var m map[string]any
+		err = json.Unmarshal(buffer.Bytes(), &m)
+		if err == nil {
+			buffer.Reset()
+		}
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -47,16 +58,7 @@ func GetData() {
 
 }
 
-var gbuffer = []byte{}
-
 func processChunk(data []byte) {
-	gbuffer = append(gbuffer, data...)
-	fmt.Println(len(gbuffer))
-	var m map[string]any
-	err := json.Unmarshal(gbuffer, &m)
-	if err == nil {
-		fmt.Println("www", len(m))
-	}
 
 }
 
