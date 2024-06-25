@@ -1,60 +1,36 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
-	"kendrag/models"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func GetData() {
 	url := "https://api.elevenlabs.io/v1/text-to-speech/GBv7mTt0atIp3Br8iCZE/stream/with-timestamps"
 
-	jsonData, _ := json.Marshal(user)
-	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	reader := strings.NewReader(example)
+	req, _ := http.NewRequest("POST", url, reader)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("xi-api-key", os.Getenv("E_API"))
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println("Error sending request:", err)
-		return nil
+		return
 	}
 	defer resp.Body.Close()
 
 	asBytes, _ := io.ReadAll(resp.Body)
 	asString := string(asBytes)
-	if os.Getenv("DEBUG") == "1" {
-		fmt.Println(asString)
-	}
+	fmt.Println(asString)
 	if resp.StatusCode != http.StatusOK {
 		fmt.Println("Error response from server:", resp.Status)
-		return nil
+		return
 	}
-	var m map[string]any
-	json.Unmarshal(asBytes, &m)
-	status, _ := m["status"].(string)
-
-	if status != "success" {
-		return nil
-	}
-
-	d1 := m["data"].(map[string]any)
-	u1 := d1["user"].(map[string]any)
-
-	tp := d1["tokenPair"].(map[string]any)
-	at := tp["accessToken"].(map[string]any)
-	access := at["token"].(string)
-	refresh := tp["refreshToken"].(string)
-
-	u1["access"] = access
-	u1["refresh"] = refresh
-	userM := models.NewUser(u1)
-
-	return userM
 
 }
 
